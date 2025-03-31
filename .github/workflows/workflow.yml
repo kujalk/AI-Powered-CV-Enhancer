@@ -61,8 +61,19 @@ jobs:
       - name: Deploy CloudFormation Stack
         if: ${{ github.event.inputs.action == 'deploy' }}
         run: |
-          ECR_IMAGE_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --query 'repositories[0].repositoryUri' --output text):latest
-          
+          # Get the latest image tag from ECR
+          LATEST_TAG=$(aws ecr describe-images \
+            --repository-name ${{ env.ECR_REPOSITORY }} \
+            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' \
+            --output text)
+
+          # Construct the full image URI with the latest tag
+          ECR_IMAGE_URI=$(aws ecr describe-repositories \
+            --repository-names ${{ env.ECR_REPOSITORY }} \
+            --query 'repositories[0].repositoryUri' \
+            --output text):$LATEST_TAG
+
+          # Deploy CloudFormation with the specific image tag
           aws cloudformation deploy \
             --template-file cloudformation.yml \
             --stack-name ${{ env.STACK_NAME }} \
@@ -70,6 +81,7 @@ jobs:
               ECRImageURI=$ECR_IMAGE_URI \
               OpenAIAPIKey=${{ secrets.OPENAI_API_KEY }} \
             --capabilities CAPABILITY_IAM
+
           
           echo "Deployed CloudFormation stack successfully"
 
