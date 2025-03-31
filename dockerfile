@@ -1,7 +1,7 @@
 # Stage 1: Build React App
 FROM node:18 as frontend
 WORKDIR /app-frontend
-COPY Frontend/ .
+COPY Frontend/cv-enhancer .
 RUN npm install && npm run build
 
 # Stage 2: FastAPI App
