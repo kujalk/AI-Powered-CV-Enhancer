@@ -80,7 +80,7 @@ app.mount("/static", StaticFiles(directory="static/build/static"), name="static"
 async def serve_react():
     return FileResponse("static/build/index.html")
 
-@app.post("/enhance-cv", response_model=CVEnhanceResponse)
+@app.post("/api/enhance-cv", response_model=CVEnhanceResponse)
 async def enhance_cv(request: CVEnhanceRequest):
     try:
         # Process the input using LangChain

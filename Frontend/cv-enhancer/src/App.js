@@ -62,7 +62,7 @@ function App() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/enhance-cv', {
+      const response = await fetch('/api/enhance-cv', { //'http://localhost:8000/enhance-cv'
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
