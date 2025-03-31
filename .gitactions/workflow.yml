@@ -1,0 +1,99 @@
+name: CV Enhancer CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options: 
+          - deploy
+          - destroy
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: cv-enhancer
+  ECS_CLUSTER: cv-enhancer-cluster
+  ECS_SERVICE: cv-enhancer-service
+  STACK_NAME: cv-enhancer-stack
+  SECRET_NAME: cv-enhancer-secrets
+
+jobs:
+  deploy_or_destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        if: ${{ github.event.inputs.action == 'deploy' }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Deploy Flow
+      - name: Login to Amazon ECR
+        id: login-ecr
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ECR Repository if it doesn't exist
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        run: |
+          aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} || \
+          aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }}
+
+      - name: Build, tag, and push Docker image to Amazon ECR
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+        run: |
+          # Build a docker container and push it to ECR
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Deploy CloudFormation Stack
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        run: |
+          ECR_IMAGE_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --query 'repositories[0].repositoryUri' --output text):latest
+          
+          aws cloudformation deploy \
+            --template-file cloudformation.yml \
+            --stack-name ${{ env.STACK_NAME }} \
+            --parameter-overrides \
+              ECRImageURI=$ECR_IMAGE_URI \
+              OpenAIAPIKey=${{ secrets.OPENAI_API_KEY }} \
+            --capabilities CAPABILITY_IAM
+          
+          echo "Deployed CloudFormation stack successfully"
+      
+      # Destroy Flow
+      - name: Delete CloudFormation Stack
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          echo "Deleting CloudFormation stack..."
+          aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
+          
+          # Wait for stack deletion to complete
+          aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
+          echo "CloudFormation stack deleted successfully"
+
+      - name: Delete ECR Repository
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          echo "Deleting ECR repository..."
+          # Force remove all images in the repository
+          aws ecr list-images --repository-name ${{ env.ECR_REPOSITORY }} --query 'imageIds[*]' --output json | \
+          jq -r '.[] | "\(.imageDigest)"' | while read -r digest; do
+            aws ecr batch-delete-image --repository-name ${{ env.ECR_REPOSITORY }} --image-ids imageDigest=$digest
+          done
+          
+          # Delete the repository
+          aws ecr delete-repository --repository-name ${{ env.ECR_REPOSITORY }} --force
+          echo "ECR repository deleted successfully"

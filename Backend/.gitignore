@@ -1,0 +1,6 @@
+.env
+virtual/
+venv/
+__pycache__/
+*.pyc
+src/static/
