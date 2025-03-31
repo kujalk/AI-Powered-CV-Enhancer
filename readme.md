@@ -1,6 +1,6 @@
 # CV Enhancer
 
-A smart application that optimizes your CV/resume to match job descriptions by leveraging AI to identify and incorporate relevant keywords and skills, increasing your chances of getting through Applicant Tracking Systems (ATS) and securing interviews.
+A smart application that optimizes your CV/resume to match job descriptions by leveraging AI to identify and incorporate relevant keywords and skills.
 
 ## 🚀 Features
 
