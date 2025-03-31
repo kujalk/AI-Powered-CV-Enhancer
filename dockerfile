@@ -7,7 +7,7 @@ RUN npm install && npm run build
 # Stage 2: FastAPI App
 FROM python:3.12
 WORKDIR /app
-COPY Backend/ .  
+COPY Backend/src .  
 COPY --from=frontend /app-frontend/build /app/static/build 
 
 RUN pip install -r requirements.txt
