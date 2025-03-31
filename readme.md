@@ -99,7 +99,7 @@ MODEL_NAME=gpt-4  # or gpt-3.5-turbo for faster but less detailed results
 - **Kugathasan Janarthanan**
 
 ## 📌 Blog
-For more information and updates, visit: [https://myblog/project](https://myblog/project)
+For more information and updates, visit: [building-an-ai-powered-cv-enhancer-using-llm-technology]([https://myblog/project](https://scripting4ever.wordpress.com/2025/03/31/building-an-ai-powered-cv-enhancer-using-llm-technology/))
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome!
