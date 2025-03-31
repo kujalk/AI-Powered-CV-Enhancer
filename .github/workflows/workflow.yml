@@ -72,6 +72,12 @@ jobs:
             --capabilities CAPABILITY_IAM
           
           echo "Deployed CloudFormation stack successfully"
+
+          # Retrieve and print the stack outputs
+          aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --query 'Stacks[0].Outputs' \
+            --output json | jq -r '.[] | "\(.OutputKey): \(.OutputValue)"'
       
       # Destroy Flow
       - name: Delete CloudFormation Stack
