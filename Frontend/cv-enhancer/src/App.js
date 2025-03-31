@@ -179,7 +179,7 @@ function App() {
       <Container maxWidth="md">
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" component="h1" align="center" gutterBottom>
-            Job Application CV Enhancer
+            Job Application CV Enhancer - 1.0
           </Typography>
           <Typography variant="subtitle1" align="center" color="text.secondary" paragraph>
             Enhance your CV with keywords from the job description to increase your chances of getting an interview.

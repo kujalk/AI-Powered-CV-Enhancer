@@ -18,7 +18,7 @@ Resources:
     Properties:
       Name: cv-enhancer-openai-api-key
       Description: Secret for storing OpenAI API Key
-      SecretString: !Sub '{"OPENAI_API_KEY":"${OpenAIAPIKey}"}'
+      SecretString: !Ref OpenAIAPIKey
       Tags:
         - Key: Application
           Value: cv-enhancer
